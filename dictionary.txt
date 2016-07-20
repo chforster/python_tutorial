@@ -4,3 +4,5 @@ Sweden Schweden
 France Frankreich
 Italy Italien
 Austria Österreich
+Ireland Irland
+Switzerland Schweiz

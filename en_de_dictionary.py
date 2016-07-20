@@ -17,5 +17,12 @@ while True:
     elif word in german_words:
         print("The english word is:", german_words[word])
     else:
-        print("Unknown word")
+        if(input("Unknown word, Wanna add (y/n)? ") == "y"):
+            fobj = open("dictionary.txt", "a")
+            language = input("is '{}' (g)erman or (e)nglish?".format(word))
+            if (language == "g"):
+                fobj.write("{} {}\n".format(input("English pendant:"), word))
+            else:
+                fobj.write("{} {}\n".format(word, input("German pendant:")))
+            fobj.close()
 	 
