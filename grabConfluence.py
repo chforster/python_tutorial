@@ -17,6 +17,7 @@ key = 'SNSLEXT'
 
 def getJson(url, parameters):
     response = requests.get(url, auth=myAuth, params=parameters, verify=False)
+    print(response.url)
     if (response.ok):
         return response.json()
     else:
@@ -26,8 +27,11 @@ def getJson(url, parameters):
 
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
-rootId = root['page']['results'][0]['id']
-
+rootId = str(root['page']['results'][0]['id'])
 # https://confluence.netconomy.net/rest/api/content/80746397?expand=body.view
-content = getJson(contentUrl+str(rootId), {'expand':'body.view'})
-print(content['body']['view']['value'])
+content = getJson(contentUrl+rootId, {'expand':'body.view'})
+#print(content['body']['view']['value'])
+fobj = open(rootId+'.html', "a")
+fobj.write(content['body']['view']['value'].encode('utf8'))
+fobj.close()
+
