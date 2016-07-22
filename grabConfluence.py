@@ -36,41 +36,47 @@ def getJson(url, parameters):
     else:
         response.raise_for_status()
 
-def writeContent(contentid, parentdir):
+def writeContent(contentid, parentdir, comment=False):
     content = getJson(contentUrl+contentid, {'expand':'body.view'})
     title = urlify(content['title'])
-    print("Write {} in directory {}".format(bcolors.OKGREEN +title +bcolors.ENDC, parentdir))
+    commentPostfix=""
     directory = os.path.join(parentdir,title)
     if not os.path.exists(directory):
         os.makedirs(directory)
+    if (comment):
+        commentPostfix="_comment"
+        print("\tWrite {}Comment{} {} in directory {}".format(bcolors.BOLD, bcolors.ENDC, bcolors.WARNING + title + bcolors.ENDC, directory))
+    else:
+        print("Write {} in directory {}".format(bcolors.OKGREEN +title +bcolors.ENDC, parentdir))
 
-    filename=os.path.join(directory, contentid+".html")
+    filename=os.path.join(directory, contentid+commentPostfix+".html")
     fobj = open(filename, "w")
     fobj.write(content['body']['view']['value'].encode('utf8'))
     fobj.close()
     return directory
 
-def writeChildren(contentid, directory):
-    children = getJson(contentUrl+contentid+'/child/page',{})
+def writeChildren(contentid, directory, comment=False):
     comments = getJson(contentUrl+contentid+'/child/comment',{})
-    attachments = getJson(contentUrl+contentid+'/child/attachment',{})
-    for child in children['results']:
-        childid=child['id']
-        parent = writeContent(childid, directory)
-        writeChildren(childid, parent)
+    if (not comment):
+        attachments = getJson(contentUrl+contentid+'/child/attachment',{})
+        children = getJson(contentUrl+contentid+'/child/page',{})
+        for child in children['results']:
+            childid=child['id']
+            parent = writeContent(childid, directory)
+            writeChildren(childid, parent)
+        for attachment in attachments['results']:
+            downloadUrl=mainUrl+attachment['_links']['download']
+            response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
+            path=os.path.join(directory, attachment['title'])
+            print("\tWrite {}Attachment{} {} in directory {}".format(bcolors.BOLD, bcolors.ENDC, bcolors.OKBLUE + attachment['title'] + bcolors.ENDC, directory))
+            fobj=open(path, "wb")
+            fobj.write(response.content)
+            fobj.close()
+
     for comment in comments['results']:
         commentid=comment['id']
-#        parent = writeContent(commentid, directory)
-        print ("\t" + bcolors.FAIL + commentid + " " + comment['title'] +  bcolors.ENDC)
-    for attachment in attachments['results']:
-        downloadUrl=mainUrl+attachment['_links']['download']
-        response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
-        path=os.path.join(directory, attachment['title'])
-        print("\tWrite {}Attachment{} {} in directory {}".format(bcolors.BOLD, bcolors.ENDC, bcolors.OKBLUE + attachment['title'] + bcolors.ENDC, directory))
-        fobj=open(path, "wb")
-        fobj.write(response.content)
-        fobj.close()
-        
+        parent = writeContent(commentid, directory, True)
+        writeChildren(commentid, parent, True)
 
 def urlify(s):
      # Remove all non-word characters (everything except numbers and letters)
