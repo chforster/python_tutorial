@@ -2,6 +2,7 @@
 
 import requests
 import getpass
+import re
 from requests.auth import HTTPBasicAuth
 import json
 
@@ -25,18 +26,30 @@ def getJson(url, parameters):
 
 def writeContent(contentid):
     content = getJson(contentUrl+contentid, {'expand':'body.view'})
-    fobj = open(contentid+'.html', "a")
+    title = urlify(content['title'])
+    fobj = open(contentid+"-"+title+'.html', "a")
     fobj.write(content['body']['view']['value'].encode('utf8'))
     fobj.close()
 
+def writeChildren(contentid):
+    children = getJson(contentUrl+contentid+'/child/page',{})
+    for child in children['results']:
+        childid=child['id']
+        writeContent(childid)
+        writeChildren(childid)
+
+def urlify(s):
+     # Remove all non-word characters (everything except numbers and letters)
+     s = re.sub(r"[^\w\s]", '', s)
+     # Replace all runs of whitespace with undercore 
+     s = re.sub(r"\s+", '_', s)
+     return s
 
 
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
 rootId = str(root['page']['results'][0]['id'])
 writeContent(rootId)
-children = getJson(contentUrl+rootId+'/child/page',{})
-for child in children['results']:
-    writeContent(child['id'])
+writeChildren(rootId)
 
 
