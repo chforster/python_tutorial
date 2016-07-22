@@ -9,6 +9,7 @@ import json
 
 contentUrl = "https://confluence.netconomy.net/rest/api/content/"
 spaceUrl = "https://confluence.netconomy.net/rest/api/space/"
+mainUrl = "https://confluence.netconomy.net"
 
 user = raw_input("User:")
 password = getpass.getpass("Password:")
@@ -19,7 +20,6 @@ key = 'SNSLEXT'
 
 def getJson(url, parameters):
     response = requests.get(url, auth=myAuth, params=parameters, verify=False)
-    print(response.url)
     if (response.ok):
         return response.json()
     else:
@@ -28,6 +28,7 @@ def getJson(url, parameters):
 def writeContent(contentid, parentdir):
     content = getJson(contentUrl+contentid, {'expand':'body.view'})
     title = urlify(content['title'])
+    print("Write {} in directory {}".format(title, parentdir))
     directory = os.path.join(parentdir,title)
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -40,10 +41,20 @@ def writeContent(contentid, parentdir):
 
 def writeChildren(contentid, directory):
     children = getJson(contentUrl+contentid+'/child/page',{})
+    attachments = getJson(contentUrl+contentid+'/child/attachment',{})
     for child in children['results']:
         childid=child['id']
         parent = writeContent(childid, directory)
         writeChildren(childid, parent)
+    for attachment in attachments['results']:
+        downloadUrl=mainUrl+attachment['_links']['download']
+        response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
+        path=os.path.join(directory, attachment['title'])
+        print("Write Attachment {} in directory {}".format(attachment['title'], directory))
+        fobj=open(path, "wb")
+        fobj.write(response.content)
+        fobj.close()
+        
 
 def urlify(s):
      # Remove all non-word characters (everything except numbers and letters)
