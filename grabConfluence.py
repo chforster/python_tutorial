@@ -23,15 +23,20 @@ def getJson(url, parameters):
     else:
         response.raise_for_status()
 
+def writeContent(contentid):
+    content = getJson(contentUrl+contentid, {'expand':'body.view'})
+    fobj = open(contentid+'.html', "a")
+    fobj.write(content['body']['view']['value'].encode('utf8'))
+    fobj.close()
+
 
 
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
 rootId = str(root['page']['results'][0]['id'])
-# https://confluence.netconomy.net/rest/api/content/80746397?expand=body.view
-content = getJson(contentUrl+rootId, {'expand':'body.view'})
-#print(content['body']['view']['value'])
-fobj = open(rootId+'.html', "a")
-fobj.write(content['body']['view']['value'].encode('utf8'))
-fobj.close()
+writeContent(rootId)
+children = getJson(contentUrl+rootId+'/child/page',{})
+for child in children['results']:
+    writeContent(child['id'])
+
 
