@@ -1,4 +1,4 @@
 "# python_tutorial" 
 
-grabConfluence needs 2 modules requests and wget
-They are installed with pip: sudo pip install wget
+grabConfluence needs module requests
+It will be installed with "sudo pip installi requests"
