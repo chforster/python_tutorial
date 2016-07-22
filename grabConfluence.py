@@ -3,6 +3,7 @@
 import requests
 import getpass
 import re
+import os
 from requests.auth import HTTPBasicAuth
 import json
 
@@ -24,19 +25,25 @@ def getJson(url, parameters):
     else:
         response.raise_for_status()
 
-def writeContent(contentid):
+def writeContent(contentid, parentdir):
     content = getJson(contentUrl+contentid, {'expand':'body.view'})
     title = urlify(content['title'])
-    fobj = open(contentid+"-"+title+'.html', "a")
+    directory = os.path.join(parentdir,title)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    filename=os.path.join(directory, contentid+".html")
+    fobj = open(filename, "a")
     fobj.write(content['body']['view']['value'].encode('utf8'))
     fobj.close()
+    return directory
 
-def writeChildren(contentid):
+def writeChildren(contentid, directory):
     children = getJson(contentUrl+contentid+'/child/page',{})
     for child in children['results']:
         childid=child['id']
-        writeContent(childid)
-        writeChildren(childid)
+        parent = writeContent(childid, directory)
+        writeChildren(childid, parent)
 
 def urlify(s):
      # Remove all non-word characters (everything except numbers and letters)
@@ -49,7 +56,7 @@ def urlify(s):
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
 rootId = str(root['page']['results'][0]['id'])
-writeContent(rootId)
-writeChildren(rootId)
+directory = writeContent(rootId, os.path.dirname(os.path.realpath(__file__)))
+writeChildren(rootId, directory)
 
 
