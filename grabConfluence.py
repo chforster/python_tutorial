@@ -6,6 +6,7 @@ import re
 import os
 from requests.auth import HTTPBasicAuth
 import json
+import time
 
 contentUrl = "https://confluence.netconomy.net/rest/api/content/"
 spaceUrl = "https://confluence.netconomy.net/rest/api/space/"
@@ -27,6 +28,9 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+commentCount = 0
+pageCount = 0
+attachmentCount = 0
 
 
 def getJson(url, parameters):
@@ -56,11 +60,15 @@ def writeContent(contentid, parentdir, comment=False):
     return directory
 
 def writeChildren(contentid, directory, comment=False):
+    global pageCount
+    global attachmentCount
+    global commentCount
     if (not comment):
         children = getJson(contentUrl+contentid+'/child/page',{'limit':'500'})
         for child in children['results']:
             childid=child['id']
             parent = writeContent(childid, directory)
+            pageCount = pageCount + 1
             writeChildren(childid, parent)
         
         attachments = getJson(contentUrl+contentid+'/child/attachment',{'limit':'500'})
@@ -73,11 +81,13 @@ def writeChildren(contentid, directory, comment=False):
             fobj=open(path, "wb")
             fobj.write(response.content)
             fobj.close()
+            attachmentCount = attachmentCount + 1
 
     comments = getJson(contentUrl+contentid+'/child/comment',{'limit':'500'})
     for comment in comments['results']:
         commentid=comment['id']
         parent = writeContent(commentid, directory, True)
+        commentCount = commentCount + 1
         writeChildren(commentid, parent, True)
 
 def urlify(s):
@@ -87,12 +97,24 @@ def urlify(s):
      s = re.sub(r"\s+", '_', s)
      return s.encode('utf8')
 
-
+jobInfo = {}
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 for key in keys:
+    start = time.time()
+    commentCount = 0
+    pageCount = 0
+    attachmentCount = 0
     root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
     rootId = str(root['page']['results'][0]['id'])
     directory = writeContent(rootId, os.path.dirname(os.path.realpath(__file__)))
     writeChildren(rootId, directory)
+    end = time.time()
+    elapsed = end - start
+    jobInfo[key] = {"elapsed": elapsed, "commentCount":commentCount, "pageCount":pageCount, "attachmentCount":attachmentCount} 
+
+print("Space\t\tPages\tAttachments\tcomments\tElapsed Time")
+for space in jobInfo:
+    print("{}\t\t{}\t\t\t{}\t\t{}\t\t{}min {}sec".format(space, jobInfo[space]["pageCount"], jobInfo[space]["attachmentCount"], jobInfo[space]["commentCount"], int(elapsed)/60, int(elapsed%60)))
+
 
 
