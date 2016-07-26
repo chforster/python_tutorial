@@ -15,7 +15,7 @@ user = raw_input("User:")
 password = getpass.getpass("Password:")
 myAuth = HTTPBasicAuth(user,password);
 
-key = 'SWAEXT'
+keys = {'SNSLEXT','SACXT','SWAEXT','CHAEXT'}
 
 class bcolors:
     HEADER = '\033[95m'
@@ -57,13 +57,13 @@ def writeContent(contentid, parentdir, comment=False):
 
 def writeChildren(contentid, directory, comment=False):
     if (not comment):
-        children = getJson(contentUrl+contentid+'/child/page',{})
+        children = getJson(contentUrl+contentid+'/child/page',{'limit':'500'})
         for child in children['results']:
             childid=child['id']
             parent = writeContent(childid, directory)
             writeChildren(childid, parent)
         
-        attachments = getJson(contentUrl+contentid+'/child/attachment',{})
+        attachments = getJson(contentUrl+contentid+'/child/attachment',{'limit':'500'})
         for attachment in attachments['results']:
             downloadUrl=mainUrl+attachment['_links']['download']
             response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
@@ -74,7 +74,7 @@ def writeChildren(contentid, directory, comment=False):
             fobj.write(response.content)
             fobj.close()
 
-    comments = getJson(contentUrl+contentid+'/child/comment',{})
+    comments = getJson(contentUrl+contentid+'/child/comment',{'limit':'500'})
     for comment in comments['results']:
         commentid=comment['id']
         parent = writeContent(commentid, directory, True)
@@ -89,9 +89,10 @@ def urlify(s):
 
 
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
-root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
-rootId = str(root['page']['results'][0]['id'])
-directory = writeContent(rootId, os.path.dirname(os.path.realpath(__file__)))
-writeChildren(rootId, directory)
+for key in keys:
+    root = getJson(spaceUrl+key+'/content',{'depth': 'root'})
+    rootId = str(root['page']['results'][0]['id'])
+    directory = writeContent(rootId, os.path.dirname(os.path.realpath(__file__)))
+    writeChildren(rootId, directory)
 
 
