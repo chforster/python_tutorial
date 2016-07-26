@@ -57,12 +57,13 @@ def writeContent(contentid, parentdir, comment=False):
 
 def writeChildren(contentid, directory, comment=False):
     if (not comment):
-        attachments = getJson(contentUrl+contentid+'/child/attachment',{})
         children = getJson(contentUrl+contentid+'/child/page',{})
         for child in children['results']:
             childid=child['id']
             parent = writeContent(childid, directory)
             writeChildren(childid, parent)
+        
+        attachments = getJson(contentUrl+contentid+'/child/attachment',{})
         for attachment in attachments['results']:
             downloadUrl=mainUrl+attachment['_links']['download']
             response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
