@@ -56,7 +56,6 @@ def writeContent(contentid, parentdir, comment=False):
     return directory
 
 def writeChildren(contentid, directory, comment=False):
-    comments = getJson(contentUrl+contentid+'/child/comment',{})
     if (not comment):
         attachments = getJson(contentUrl+contentid+'/child/attachment',{})
         children = getJson(contentUrl+contentid+'/child/page',{})
@@ -74,6 +73,7 @@ def writeChildren(contentid, directory, comment=False):
             fobj.write(response.content)
             fobj.close()
 
+    comments = getJson(contentUrl+contentid+'/child/comment',{})
     for comment in comments['results']:
         commentid=comment['id']
         parent = writeContent(commentid, directory, True)
