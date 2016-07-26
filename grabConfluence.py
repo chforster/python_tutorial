@@ -15,7 +15,7 @@ user = raw_input("User:")
 password = getpass.getpass("Password:")
 myAuth = HTTPBasicAuth(user,password);
 
-key = 'SNSLEXT'
+key = 'SWAEXT'
 
 class bcolors:
     HEADER = '\033[95m'
@@ -67,8 +67,9 @@ def writeChildren(contentid, directory, comment=False):
         for attachment in attachments['results']:
             downloadUrl=mainUrl+attachment['_links']['download']
             response=requests.get(downloadUrl, auth=myAuth, params={}, verify=False)
-            path=os.path.join(directory, attachment['title'])
-            print("\tWrite {}Attachment{} {} in directory {}".format(bcolors.BOLD, bcolors.ENDC, bcolors.OKBLUE + attachment['title'] + bcolors.ENDC, directory))
+            title = attachment['title'].encode('utf8')
+            path=os.path.join(directory, title)
+            print("\tWrite {}Attachment{} {} in directory {}".format(bcolors.BOLD, bcolors.ENDC, bcolors.OKBLUE + title + bcolors.ENDC, directory))
             fobj=open(path, "wb")
             fobj.write(response.content)
             fobj.close()
@@ -83,7 +84,7 @@ def urlify(s):
      s = re.sub(r"[^\w\s]", '', s)
      # Replace all runs of whitespace with undercore 
      s = re.sub(r"\s+", '_', s)
-     return s
+     return s.encode('utf8')
 
 
 # https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
