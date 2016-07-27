@@ -1,4 +1,4 @@
 "# python_tutorial" 
 
-grabConfluence needs module requests
-It will be installed with "sudo pip installi requests"
+grabConfluenc.py and grabJira.py  need module "requests"
+It will be installed with "sudo pip install requests"
