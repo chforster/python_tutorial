@@ -114,6 +114,7 @@ for key in keys:
 
 print("Space\t\tPages\tAttachments\tcomments\tElapsed Time")
 for space in jobInfo:
+    elapsed = jobINfo[space]["elapsed"]
     print("{}\t\t{}\t\t\t{}\t\t{}\t\t{}min {}sec".format(space, jobInfo[space]["pageCount"], jobInfo[space]["attachmentCount"], jobInfo[space]["commentCount"], int(elapsed)/60, int(elapsed%60)))
 
 
