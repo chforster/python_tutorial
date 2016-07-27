@@ -30,7 +30,6 @@ class bcolors:
 pageCount = 0
 attachmentCount = 0
 
-
 def getJson(url, parameters):
     response = requests.get(url, auth=myAuth, params=parameters, verify=False)
     if (response.ok):
@@ -63,7 +62,6 @@ def writeIssue(issueNr, issueLink, path):
         attachmentCount = attachmentCount + 1
 
 jobInfo = {}
-# https://confluence.netconomy.net/rest/api/space/SNSLEXT/content?depth=root
 path =  os.path.dirname(os.path.realpath(__file__))
 for key in keys:
     start = time.time()
@@ -72,6 +70,7 @@ for key in keys:
     projectPath = os.path.join(path, key)
     if not os.path.exists(projectPath):
         os.makedirs(projectPath)
+    # https://jira-new.netconomy.net/rest/api/2/search?jql=project%3DSNSL&maxResults=5000 
     root = getJson(searchUrl,{'jql': 'project=' + key,'maxResults':'5000'})
     for ids in root['issues']:
         issueNr = ids['key']
