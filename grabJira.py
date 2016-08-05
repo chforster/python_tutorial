@@ -11,7 +11,7 @@ import time
 searchUrl = "https://jira-new.netconomy.net/rest/api/2/search"
 mainUrl = "https://confluence.netconomy.net"
 
-user = raw_input("User:")
+user = input("User:")
 password = getpass.getpass("Password:")
 myAuth = HTTPBasicAuth(user,password);
 
